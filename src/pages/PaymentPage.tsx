@@ -1,20 +1,23 @@
+// src/pages/PaymentPage.tsx
 import React, { useState } from "react";
 import { createPayment } from "../api/paymentApi";
 import type { Payment } from "../types/Payment";
 
 const PaymentPage: React.FC = () => {
   const [schoolId, setSchoolId] = useState("");
+  const [amount, setAmount] = useState<number>(0); // state for order amount
   const [trusteeId, setTrusteeId] = useState("");
-  const [amount, setAmount] = useState<number>(0);
   const [studentName, setStudentName] = useState("");
   const [studentId, setStudentId] = useState("");
+  const [studentEmail, setStudentEmail] = useState("");
   const [result, setResult] = useState<Payment | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async () => {
-    if (!schoolId || !trusteeId || !studentName || !studentId || amount <= 0) {
-      alert("Please fill all fields correctly");
+    // Basic validation
+    if (!schoolId || amount <= 0 || !trusteeId || !studentName || !studentId) {
+      alert("Please fill all required fields correctly");
       return;
     }
 
@@ -24,14 +27,11 @@ const PaymentPage: React.FC = () => {
     try {
       const res = await createPayment({
         schoolId,
+        order_amount: amount, // must match backend DTO
         trusteeId,
-        amount,
-        studentInfo: {
-          name: studentName,
-          id: studentId,
-        },
+        studentInfo: { name: studentName, id: studentId, email: studentEmail || undefined }
       });
-      setResult(res);
+      setResult(res); // handle API response shape
     } catch (err: any) {
       console.error("Payment creation failed:", err);
       setError(err?.response?.data?.message || "Failed to create payment");
@@ -49,35 +49,40 @@ const PaymentPage: React.FC = () => {
         <input
           placeholder="School ID"
           value={schoolId}
-          onChange={(e) => setSchoolId(e.target.value)}
-          className="border px-3 py-2 rounded"
-        />
-        <input
-          placeholder="Trustee ID"
-          value={trusteeId}
-          onChange={(e) => setTrusteeId(e.target.value)}
-          className="border px-3 py-2 rounded"
-        />
-        <input
-          placeholder="Student Name"
-          value={studentName}
-          onChange={(e) => setStudentName(e.target.value)}
-          className="border px-3 py-2 rounded"
-        />
-        <input
-          placeholder="Student ID"
-          value={studentId}
-          onChange={(e) => setStudentId(e.target.value)}
+          onChange={e => setSchoolId(e.target.value)}
           className="border px-3 py-2 rounded"
         />
         <input
           type="number"
           placeholder="Amount"
           value={amount}
-          onChange={(e) => setAmount(parseInt(e.target.value))}
+          onChange={e => setAmount(Number(e.target.value))}
           className="border px-3 py-2 rounded"
         />
-
+        <input
+          placeholder="Trustee ID"
+          value={trusteeId}
+          onChange={e => setTrusteeId(e.target.value)}
+          className="border px-3 py-2 rounded"
+        />
+        <input
+          placeholder="Student Name"
+          value={studentName}
+          onChange={e => setStudentName(e.target.value)}
+          className="border px-3 py-2 rounded"
+        />
+        <input
+          placeholder="Student ID"
+          value={studentId}
+          onChange={e => setStudentId(e.target.value)}
+          className="border px-3 py-2 rounded"
+        />
+        <input
+          placeholder="Student Email (optional)"
+          value={studentEmail}
+          onChange={e => setStudentEmail(e.target.value)}
+          className="border px-3 py-2 rounded"
+        />
         <button
           onClick={handleSubmit}
           disabled={loading}
@@ -89,7 +94,7 @@ const PaymentPage: React.FC = () => {
         </button>
       </div>
 
-      {error && <p className="mt-4 text-red-600">{error}</p>}
+      {error && <p className="mt-4 text-red-600 font-medium">Error: {error}</p>}
 
       {result && (
         <div className="mt-6 p-4 border rounded shadow bg-gray-50">
@@ -97,8 +102,19 @@ const PaymentPage: React.FC = () => {
           <p><strong>Custom Order ID:</strong> {result.custom_order_id}</p>
           <p><strong>School ID:</strong> {result.school_id}</p>
           <p><strong>Trustee ID:</strong> {result.trustee_id}</p>
+          <p><strong>Student Name:</strong> {result.student_info?.name}</p>
+          <p><strong>Student ID:</strong> {result.student_info?.id}</p>
+          <p><strong>Student Email:</strong> {result.student_info?.email || "-"}</p>
           <p><strong>Amount:</strong> ₹{result.order_amount}</p>
-          <p><strong>Status:</strong> {result.status}</p>
+          <p>
+            <strong>Status:</strong>{" "}
+            <span className={`font-semibold ${
+              result.status === "success" ? "text-green-600" :
+              result.status === "pending" ? "text-yellow-600" : "text-red-600"
+            }`}>
+              {result.status || "-"}
+            </span>
+          </p>
           {result.paymentUrl && (
             <p>
               <strong>Payment URL:</strong>{" "}
