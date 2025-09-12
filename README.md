@@ -76,7 +76,8 @@ This page makes the system interactive by not just showing data, but actually le
   ![Dashboard Screenshot](./public/screenshots/dashboard.png)
 
 - **Create Payment Page**  
-  ![Payment Screenshot](./public/screenshots/payment.png)
+  ![Payment Screenshot](./public/screenshots/payment1.png)
+  ![Payment Screenshot](./public/screenshots/payment2.png)
 
 - **Transaction Status Page**  
   ![Status Screenshot](./public/screenshots/status.png)
